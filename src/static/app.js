@@ -581,6 +581,12 @@ document.addEventListener("DOMContentLoaded", () => {
         `
         }
       </div>
+      <div class="share-buttons">
+        <span class="share-label">Share:</span>
+        <button class="share-btn share-twitter" aria-label="Share on X (Twitter)" title="Share on X (Twitter)">&#120143;</button>
+        <button class="share-btn share-facebook" aria-label="Share on Facebook" title="Share on Facebook">f</button>
+        <button class="share-btn share-copy" aria-label="Copy link" title="Copy link">&#128279;</button>
+      </div>
     `;
 
     // Add click handlers for delete buttons
@@ -598,6 +604,48 @@ document.addEventListener("DOMContentLoaded", () => {
         });
       }
     }
+
+    // Add click handlers for share buttons
+    const shareUrl = window.location.origin + window.location.pathname;
+    const shareText = `Check out this activity at Mergington High School: ${name} — ${details.description}`;
+
+    activityCard.querySelector(".share-twitter").addEventListener("click", () => {
+      const url = `https://twitter.com/intent/tweet?text=${encodeURIComponent(shareText)}&url=${encodeURIComponent(shareUrl)}`;
+      window.open(url, "_blank", "noopener,noreferrer");
+    });
+
+    activityCard.querySelector(".share-facebook").addEventListener("click", () => {
+      const url = `https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(shareUrl)}&quote=${encodeURIComponent(shareText)}`;
+      window.open(url, "_blank", "noopener,noreferrer");
+    });
+
+    activityCard.querySelector(".share-copy").addEventListener("click", (event) => {
+      const copyButton = event.currentTarget;
+      const textToCopy = `${shareText}\n${shareUrl}`;
+      if (navigator.clipboard && window.isSecureContext) {
+        navigator.clipboard.writeText(textToCopy).then(() => {
+          showCopySuccess(copyButton);
+        }).catch(() => {
+          showMessage("Could not copy link. Please try again.", "error");
+        });
+      } else {
+        // Fallback for non-secure contexts
+        const textArea = document.createElement("textarea");
+        textArea.value = textToCopy;
+        textArea.style.position = "fixed";
+        textArea.style.opacity = "0";
+        document.body.appendChild(textArea);
+        textArea.focus();
+        textArea.select();
+        try {
+          document.execCommand("copy");
+          showCopySuccess(copyButton);
+        } catch {
+          showMessage("Could not copy link. Please try again.", "error");
+        }
+        document.body.removeChild(textArea);
+      }
+    });
 
     activitiesList.appendChild(activityCard);
   }
@@ -822,6 +870,17 @@ document.addEventListener("DOMContentLoaded", () => {
         }
       }
     );
+  }
+
+  // Show copy success feedback on a button
+  function showCopySuccess(button) {
+    const original = button.innerHTML;
+    button.innerHTML = "✓";
+    button.classList.add("share-copy-success");
+    setTimeout(() => {
+      button.innerHTML = original;
+      button.classList.remove("share-copy-success");
+    }, 2000);
   }
 
   // Show message function
